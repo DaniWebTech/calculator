@@ -1,88 +1,92 @@
-const display = document.getElementById("display");
-const calculator = document.getElementById("calculator");
+const display = document.getElementById('display');
+const buttons = document.querySelectorAll('#calculator button');
 
-let operand1 = "";
-let operand2 = "";
-let operator = "";
-let result = "";
-let displayValue = "";
+let operand1 = null;
+let operand2 = null;
+let operator = null;
 
-function inputNumber(number) {
-  displayValue += number;
+function clear() {
+  operand1 = null;
+  operand2 = null;
+  operator = null;
+  updateDisplay('');
 }
 
-function inputOperator(operatorValue) {
-  if (result) {
-    operand1 = result;
-    result = "";
+function updateDisplay(value) {
+  display.textContent = value;
+}
+
+function handleNumberClick(event) {
+  const number = event.target.textContent;
+
+  if (operator === null) {
+    operand1 = (operand1 === null) ? number : operand1 + number;
+    updateDisplay(operand1);
+  } else {
+    operand2 = (operand2 === null) ? number : operand2 + number;
+    updateDisplay(operand2);
   }
-  operand1 = displayValue;
-  operator = operatorValue;
-  displayValue = "";
 }
+
+function handleOperatorClick(event) {
+  const newOperator = event.target.textContent;
+
+  if (operand1 === null) {
+    return;
+  }
+
+  if (operator !== null && operand2 !== null) {
+    operand1 = calculate();
+    operand2 = null;
+    updateDisplay(operand1);
+  }
+
+  operator = newOperator;
+
+  if (operand2 !== null) {
+    updateDisplay(operand1 + operator + operand2);
+  } else {
+    updateDisplay(operand1 + operator);
+  }
+}
+
 
 function calculate() {
-  operand2 = displayValue;
-  result = operate(operator, operand1, operand2);
-  displayValue = result;
-  operand1 = "";
-  operand2 = "";
-  operator = "";
-}
+  const a = parseFloat(operand1);
+  const b = parseFloat(operand2);
 
-function clearDisplay() {
-  displayValue = "";
-  result = "";
-}
-
-function updateDisplay(displayValue, result) {
-  display.textContent = displayValue + " = " + result;
-}
-
-function operate(operator, operand1, operand2) {
-  operand1 = parseFloat(operand1);
-  operand2 = parseFloat(operand2);
-  if (operator === "+") {
-    return operand1 + operand2;
-  } else if (operator === "-") {
-    return operand1 - operand2;
-  } else if (operator === "*") {
-    return operand1 * operand2;
-  } else if (operator === "/") {
-    return operand1 / operand2;
+  switch (operator) {
+    case '+':
+      return a + b;
+    case '-':
+      return a - b;
+    case '*':
+      return a * b;
+    case '/':
+      return a / b;
+    default:
+      return null;
   }
 }
 
-const rows = document.querySelectorAll('.row');
-let rowIndex = 0;
+function handleEqualsClick() {
+  if (operand1 !== null && operator !== null && operand2 !== null) {
+    const result = calculate();
+    operand1 = result.toString();
+    operand2 = null;
+    operator = null;
+    updateDisplay(result);
+  }
+}
 
 buttons.forEach(button => {
-  const buttonEl = document.createElement('button');
-  buttonEl.textContent = button.value;
-  buttonEl.dataset.type = button.type;
-  buttonEl.addEventListener('click', () => {
-    const { type, value } = button;
-    if (type === 'number') {
-      inputNumber(value);
-      updateDisplay(displayValue, result);
-    } else if (type === 'operator') {
-      inputOperator(value);
-    } else if (type === 'clear') {
-      clearDisplay();
-      updateDisplay(displayValue, result);
-    } else if (type === 'calculate') {
-      calculate();
-      updateDisplay(displayValue, result);
-    }
-  });
-  rows[rowIndex].appendChild(buttonEl);
-  if ((rowIndex + 1) % 4 === 0) {
-    rowIndex = 0;
-  } else {
-    rowIndex++;
+  if (button.textContent === 'clear') {
+    button.addEventListener('click', clear);
+  } else if (/^\d+$/.test(button.textContent)) {
+    button.addEventListener('click', handleNumberClick);
+  } else if (/^[-+*/]$/.test(button.textContent)) {
+    button.addEventListener('click', handleOperatorClick);
+  } else if (button.textContent === '=') {
+    button.addEventListener('click', handleEqualsClick);
   }
 });
-
-
-
-
